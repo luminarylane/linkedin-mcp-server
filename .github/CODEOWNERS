@@ -1,0 +1,8 @@
+# CODEOWNERS — automatic reviewer assignment
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @raveenb
+
+/src/ @raveenb
+/.github/ @raveenb
+/README.md @raveenb

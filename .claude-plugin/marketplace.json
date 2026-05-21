@@ -1,0 +1,39 @@
+{
+  "name": "luminary-lane-tools",
+  "owner": {
+    "name": "Luminary Lane",
+    "email": "raveen.b@gmail.com"
+  },
+  "metadata": {
+    "description": "AI-powered tools for social media automation and content creation",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "linkedin",
+      "source": {
+        "source": "github",
+        "repo": "luminarylane/linkedin-mcp-server"
+      },
+      "description": "Interact with LinkedIn — publish posts, upload media, comment, react, reshare, and analyse your organisation's performance directly in Claude.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Raveen Beemsingh",
+        "email": "raveen.b@gmail.com"
+      },
+      "homepage": "https://github.com/luminarylane/linkedin-mcp-server",
+      "repository": "https://github.com/luminarylane/linkedin-mcp-server",
+      "license": "MIT",
+      "keywords": [
+        "linkedin",
+        "social-media",
+        "publishing",
+        "analytics",
+        "automation",
+        "mcp"
+      ],
+      "category": "social-media",
+      "tags": ["linkedin", "social", "publishing", "analytics", "automation"]
+    }
+  ]
+}

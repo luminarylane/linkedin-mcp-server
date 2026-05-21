@@ -1,0 +1,37 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Environment & secrets — never commit these
+.env
+.env.local
+.env.*.local
+*.key
+.secrets
+
+# Local dev scripts (may contain real credentials)
+test-live.sh
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Windows
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test output
+coverage/
+.nyc_output/

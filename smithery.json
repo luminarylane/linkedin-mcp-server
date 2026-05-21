@@ -1,0 +1,100 @@
+{
+  "name": "linkedin-mcp-server",
+  "title": "LinkedIn MCP Server — Publish Posts, Analyse & Engage on LinkedIn with Claude",
+  "description": "MCP server for LinkedIn. Publish text, image, video, document and link posts, comment, react, reshare, and analyse your organisation's performance directly in Claude Desktop.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Raveen Beemsingh",
+    "email": "raveen.b@gmail.com",
+    "github": "raveenb"
+  },
+  "license": "MIT",
+  "urls": {
+    "repository": "https://github.com/luminarylane/linkedin-mcp-server",
+    "homepage": "https://github.com/luminarylane/linkedin-mcp-server",
+    "documentation": "https://github.com/luminarylane/linkedin-mcp-server#readme",
+    "issues": "https://github.com/luminarylane/linkedin-mcp-server/issues",
+    "npm": "https://www.npmjs.com/package/linkedin-mcp-server"
+  },
+  "categories": [
+    "social-media",
+    "communication",
+    "automation",
+    "analytics",
+    "claude-integration"
+  ],
+  "keywords": [
+    "linkedin",
+    "social-media",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "automation",
+    "publishing",
+    "analytics"
+  ],
+  "runtime": {
+    "language": "typescript",
+    "minVersion": "18",
+    "package": "linkedin-mcp-server"
+  },
+  "requirements": {
+    "apiKey": {
+      "name": "LINKEDIN_ACCESS_TOKEN",
+      "description": "LinkedIn OAuth 2.0 access token (60-day lifetime). Scopes: openid, profile, w_member_social.",
+      "required": true,
+      "url": "https://developer.linkedin.com/apps"
+    }
+  },
+  "installation": [
+    {
+      "type": "npx",
+      "command": "npx -y linkedin-mcp-server"
+    },
+    {
+      "type": "npm",
+      "command": "npm install -g linkedin-mcp-server"
+    }
+  ],
+  "configuration": {
+    "claude": {
+      "mcpServers": {
+        "linkedin": {
+          "command": "npx",
+          "args": ["-y", "linkedin-mcp-server"],
+          "env": {
+            "LINKEDIN_ACCESS_TOKEN": "your-access-token",
+            "LINKEDIN_ORG_ID": "your-org-id"
+          }
+        }
+      }
+    }
+  },
+  "tools": [
+    { "name": "linkedin_whoami", "description": "Verify which account this token belongs to", "category": "discovery" },
+    { "name": "linkedin_list_capabilities", "description": "List all supported content types, limits, and caveats", "category": "discovery" },
+    { "name": "linkedin_get_media_specs", "description": "Media format specs — dimensions, size limits, formats", "category": "sense" },
+    { "name": "linkedin_get_org_analytics", "description": "Page views and visitor demographics for your organisation", "category": "sense" },
+    { "name": "linkedin_get_post_analytics", "description": "Likes, comments, and shares for a specific post", "category": "sense" },
+    { "name": "linkedin_get_comments", "description": "Comments on a post", "category": "sense" },
+    { "name": "linkedin_get_mentions", "description": "Social actions where your organisation is mentioned", "category": "sense" },
+    { "name": "linkedin_get_follower_stats", "description": "Follower demographics — seniority, industry, company size", "category": "sense" },
+    { "name": "linkedin_get_share_stats", "description": "Share statistics for specific posts", "category": "sense" },
+    { "name": "linkedin_create_post", "description": "Publish text, image, video, document, or link preview posts", "category": "act" },
+    { "name": "linkedin_comment", "description": "Comment on a post (max 1,250 chars)", "category": "act" },
+    { "name": "linkedin_react", "description": "Like a post", "category": "act" },
+    { "name": "linkedin_share", "description": "Reshare a post with optional commentary", "category": "act" },
+    { "name": "linkedin_delete_post", "description": "Delete a post by URN", "category": "act" }
+  ],
+  "features": [
+    "15 tools — 2 Discovery + 6 SENSE (read) + 7 ACT (write)",
+    "Rich post types: text, image, video, document/carousel, link preview",
+    "First comment support auto-posted after creation",
+    "Token-bucket rate limiter respecting LinkedIn limits",
+    "Auto-retry with exponential backoff on HTTP 429",
+    "SSRF protection for media URL downloads",
+    "Upload URL pinning to LinkedIn-owned hosts",
+    "Prompt injection protection via randomised EXTCONTENT markers",
+    "In-memory client and identity cache with 4-hour TTL"
+  ]
+}

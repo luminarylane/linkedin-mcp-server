@@ -1,0 +1,29 @@
+{
+  "name": "linkedin",
+  "description": "Interact with LinkedIn — publish posts, upload media, comment, react, reshare, and analyse your organisation's performance directly in Claude.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Raveen Beemsingh",
+    "email": "raveen.b@gmail.com"
+  },
+  "homepage": "https://github.com/luminarylane/linkedin-mcp-server",
+  "repository": "https://github.com/luminarylane/linkedin-mcp-server",
+  "license": "MIT",
+  "keywords": [
+    "linkedin",
+    "social-media",
+    "publishing",
+    "analytics",
+    "automation"
+  ],
+  "mcpServers": {
+    "linkedin": {
+      "command": "npx",
+      "args": ["-y", "linkedin-mcp-server"],
+      "env": {
+        "LINKEDIN_ACCESS_TOKEN": "${LINKEDIN_ACCESS_TOKEN}",
+        "LINKEDIN_ORG_ID": "${LINKEDIN_ORG_ID}"
+      }
+    }
+  }
+}

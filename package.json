@@ -1,0 +1,61 @@
+{
+  "name": "linkedin-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for LinkedIn — publish posts, upload media, comment, react, and analyse your organisation with Claude",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "linkedin-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "linkedin",
+    "social-media",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "publishing",
+    "analytics",
+    "automation",
+    "ai"
+  ],
+  "author": {
+    "name": "Raveen Beemsingh",
+    "email": "raveen.b@gmail.com",
+    "url": "https://github.com/raveenb"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/luminarylane/linkedin-mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luminarylane/linkedin-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/luminarylane/linkedin-mcp-server/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
+  }
+}
