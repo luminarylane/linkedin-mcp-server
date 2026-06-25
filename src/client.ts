@@ -433,7 +433,11 @@ export class LinkedInClient {
         Authorization: `Bearer ${this.accessToken}`,
         "Content-Type": contentType,
       },
-      body: new Uint8Array(body.buffer, body.byteOffset, body.byteLength) as unknown as BodyInit,
+      body: new Uint8Array(
+        body.buffer,
+        body.byteOffset,
+        body.byteLength,
+      ) as unknown as BodyInit,
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (!response.ok) {

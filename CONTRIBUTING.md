@@ -5,6 +5,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 ## Development Setup
 
 ### Prerequisites
+
 - Node.js 18+
 - npm 9+
 - Git

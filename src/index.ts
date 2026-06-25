@@ -465,7 +465,8 @@ server.registerTool(
           maxDuration: "10 minutes",
           maxDimensions: "1920x1080",
           recommendedDimensions: "1920x1080 (landscape), 1080x1920 (vertical)",
-          notes: "Upload may take several minutes for large files. H.264 codec recommended.",
+          notes:
+            "Upload may take several minutes for large files. H.264 codec recommended.",
         },
         {
           type: "document",
@@ -482,7 +483,10 @@ server.registerTool(
           reason:
             "LinkedIn returns 403 for organic native carousels. Use PDF document instead — renders as swipeable carousel.",
         },
-        { type: "audio", reason: "LinkedIn does not support audio attachments on posts" },
+        {
+          type: "audio",
+          reason: "LinkedIn does not support audio attachments on posts",
+        },
       ],
       tip: "For carousel-style content, create a PDF and upload as a document — it renders as a swipeable carousel on LinkedIn.",
     });

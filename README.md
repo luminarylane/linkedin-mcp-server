@@ -12,11 +12,13 @@ A Model Context Protocol (MCP) server that enables Claude Desktop (and other MCP
 ## ✨ Features
 
 ### 🔐 Authentication
+
 - **OAuth 2.0 Bearer Token** — Single `LINKEDIN_ACCESS_TOKEN` for all operations
 - **Per-call credentials** — Pass `accessToken` as a tool argument for multi-account setups
 - **Optional org context** — Set `LINKEDIN_ORG_ID` once for all organisation analytics tools
 
 ### 📝 Rich Content Publishing
+
 - **Text posts** — Up to 3,000 characters with optional hashtags
 - **Image posts** — JPG/PNG/GIF up to 10 MB, uploaded directly from URL
 - **Video posts** — MP4/MOV up to 200 MB, uploaded directly from URL
@@ -25,11 +27,13 @@ A Model Context Protocol (MCP) server that enables Claude Desktop (and other MCP
 - **First comment** — Auto-post a follow-up comment 3–5 s after creation for engagement
 
 ### 🛡️ Security
+
 - **SSRF protection** — Blocks private/internal IP ranges and loopback addresses during media downloads
 - **Upload URL pinning** — Binary uploads only accepted to `*.linkedin.com` / `*.licdn.com` hosts
 - **Prompt injection protection** — External content wrapped in randomised `EXTCONTENT` markers
 
 ### ⚡ Performance
+
 - **In-memory client cache** — Reuses authenticated clients (4 h TTL)
 - **Authenticated user cache** — Resolves `me` once per credential key (4 h TTL)
 - **Token-bucket rate limiter** — Conservative limits enforced before hitting the API
@@ -95,6 +99,7 @@ For organisation analytics, note your **LinkedIn Organization ID** (numeric, fro
 ```
 
 Or install directly:
+
 ```bash
 /plugin install linkedin@luminarylane/linkedin-mcp-server
 ```
@@ -107,6 +112,7 @@ LINKEDIN_ACCESS_TOKEN=your-token npx -y linkedin-mcp-server
 ```
 
 **Claude Desktop configuration:**
+
 ```json
 {
   "mcpServers": {
@@ -169,10 +175,10 @@ npm run build
 
 ## 🔑 Authentication
 
-| Env Var | Required | Description |
-|---------|----------|-------------|
-| `LINKEDIN_ACCESS_TOKEN` | Yes | OAuth 2.0 bearer token (60-day lifetime) |
-| `LINKEDIN_ORG_ID` | For org tools | Numeric organisation ID from company page URL |
+| Env Var                 | Required      | Description                                   |
+| ----------------------- | ------------- | --------------------------------------------- |
+| `LINKEDIN_ACCESS_TOKEN` | Yes           | OAuth 2.0 bearer token (60-day lifetime)      |
+| `LINKEDIN_ORG_ID`       | For org tools | Numeric organisation ID from company page URL |
 
 **Per-call credentials** — pass `accessToken` and/or `organizationId` directly as tool arguments to manage multiple accounts from one server instance.
 
@@ -198,12 +204,12 @@ Once configured, ask Claude to:
 
 The server enforces conservative rate limits client-side:
 
-| Category | Limit | Window |
-|----------|-------|--------|
-| Global | 100 requests | 24 hours |
-| Reads | 60 requests | 1 hour |
-| Writes (posts/comments/reactions) | 25 actions | 24 hours |
-| Delete | 10 actions | 1 hour |
+| Category                          | Limit        | Window   |
+| --------------------------------- | ------------ | -------- |
+| Global                            | 100 requests | 24 hours |
+| Reads                             | 60 requests  | 1 hour   |
+| Writes (posts/comments/reactions) | 25 actions   | 24 hours |
+| Delete                            | 10 actions   | 1 hour   |
 
 LinkedIn does not publish exact rate limits — these are conservative estimates for the basic tier. When a limit is reached the server returns a structured error with `retryAfterSeconds` and an `action` hint.
 
@@ -214,6 +220,7 @@ LinkedIn does not publish exact rate limits — these are conservative estimates
 ```
 AUTH_EXPIRED: Token may have expired (60-day lifetime). Re-authenticate via OAuth.
 ```
+
 LinkedIn access tokens expire after 60 days. Generate a new token in the [Developer Portal](https://developer.linkedin.com/apps).
 
 ### 403 — Missing scope
@@ -221,6 +228,7 @@ LinkedIn access tokens expire after 60 days. Generate a new token in the [Develo
 ```
 SCOPE_MISSING: App may lack required OAuth scope (w_member_social for writes).
 ```
+
 Ensure your LinkedIn app has `w_member_social` scope and re-generate the token.
 
 ### 403 — Carousel returns 403
@@ -228,6 +236,7 @@ Ensure your LinkedIn app has `w_member_social` scope and re-generate the token.
 ```
 CAROUSEL_UNSUPPORTED: Organic carousels return 403.
 ```
+
 LinkedIn disables organic native carousels via API. Use `documentUrl` with a PDF instead — it renders as a swipeable carousel.
 
 ### 403 — Organisation permission
@@ -235,6 +244,7 @@ LinkedIn disables organic native carousels via API. Use `documentUrl` with a PDF
 ```
 ORG_PERMISSION: User may not have admin access to this organization.
 ```
+
 The authenticated user needs at least **Community Manager** role on the LinkedIn Company Page.
 
 ### 413 — File too large
@@ -242,6 +252,7 @@ The authenticated user needs at least **Community Manager** role on the LinkedIn
 ```
 FILE_TOO_LARGE: Image max 10MB, video max 200MB, document max 100MB.
 ```
+
 Compress the file or use a smaller variant before uploading.
 
 ### Document post — no post ID returned

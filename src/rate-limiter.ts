@@ -115,7 +115,8 @@ export function checkRateLimit(
 ): { allowed: true } | { allowed: false; retryAfterMs: number } {
   const isWrite = toolName ? WRITE_TOOL_NAMES.has(toolName) : false;
 
-  const cost = overrideCost ?? (isWrite && toolName ? WRITE_COSTS[toolName].cost : 1);
+  const cost =
+    overrideCost ?? (isWrite && toolName ? WRITE_COSTS[toolName].cost : 1);
   const globalWait = globalBucket.msUntilAvailable(cost);
   if (globalWait > 0) return { allowed: false, retryAfterMs: globalWait };
 

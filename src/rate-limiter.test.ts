@@ -121,9 +121,7 @@ describe("withRetry", () => {
       return Promise.reject(new Error("HTTP 429 Too Many Requests"));
     };
 
-    await expect(withRetry(fn)).rejects.toThrow(
-      "HTTP 429 Too Many Requests",
-    );
+    await expect(withRetry(fn)).rejects.toThrow("HTTP 429 Too Many Requests");
   });
 
   it("throws after exhausting all retries on 429", async () => {

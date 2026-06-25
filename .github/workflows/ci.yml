@@ -2,37 +2,37 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test-matrix:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ['18', '20', '22']
+        node-version: ["18", "20", "22"]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-    - name: Set up Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Format check with prettier
-      run: npx prettier --check .
+      - name: Format check with prettier
+        run: npx prettier --check .
 
-    - name: Type check with tsc
-      run: npx tsc --noEmit
+      - name: Type check with tsc
+        run: npx tsc --noEmit
 
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
 
   # Single status check for branch protection rules
   test:
