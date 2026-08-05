@@ -1,0 +1,16 @@
+{
+  "name": "io.github.luminarylane/linkedin-mcp-server",
+  "description": "Read LinkedIn organisation insights and publish LinkedIn content.",
+  "repository": {
+    "url": "https://github.com/luminarylane/linkedin-mcp-server",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@luminarylane/linkedin-mcp-server",
+      "version": "1.0.46",
+      "transport": { "type": "stdio" }
+    }
+  ]
+}

@@ -1,59 +1,41 @@
 {
-  "name": "linkedin-mcp-server",
-  "version": "1.0.0",
-  "description": "MCP server for LinkedIn — publish posts, upload media, comment, react, and analyse your organisation with Claude",
+  "name": "@luminarylane/linkedin-mcp-server",
+  "version": "1.0.46",
+  "description": "Standalone LinkedIn MCP Server — SENSE + ACT tools for the LinkedIn API",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "linkedin-mcp-server": "dist/index.js"
+    "luminarylane-linkedin-mcp": "dist/index.js"
   },
-  "files": [
-    "dist/",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
-  ],
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "npm test && npm run build"
   },
-  "engines": {
-    "node": ">=18"
-  },
-  "keywords": [
-    "linkedin",
-    "social-media",
-    "mcp",
-    "model-context-protocol",
-    "claude",
-    "publishing",
-    "analytics",
-    "automation",
-    "ai"
-  ],
-  "author": {
-    "name": "Raveen Beemsingh",
-    "email": "raveen.b@gmail.com",
-    "url": "https://github.com/raveenb"
-  },
-  "license": "MIT",
+  "files": ["dist", "README.md", "LICENSE", "SECURITY.md"],
+  "engines": { "node": ">=22.14.0" },
+  "repository": { "type": "git", "url": "git+https://github.com/luminarylane/linkedin-mcp-server.git" },
+  "bugs": { "url": "https://github.com/luminarylane/linkedin-mcp-server/issues" },
   "homepage": "https://github.com/luminarylane/linkedin-mcp-server#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/luminarylane/linkedin-mcp-server.git"
-  },
-  "bugs": {
-    "url": "https://github.com/luminarylane/linkedin-mcp-server/issues"
-  },
+  "license": "MIT",
+  "publishConfig": { "access": "public" },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.24.0"
+    "langfuse": "^3.38.20",
+    "pino": "^10.3.1",
+    "zod": "^4.1.5"
+  },
+  "overrides": {
+    "router": {
+      "path-to-regexp": ">=8.4.0"
+    },
+    "fast-uri": "^4.1.2",
+    "ip-address": "^10.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "prettier": "^3.4.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"

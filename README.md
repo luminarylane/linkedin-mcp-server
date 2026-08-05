@@ -1,10 +1,10 @@
 # 💼 LinkedIn MCP Server
 
 [![CI](https://github.com/luminarylane/linkedin-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/luminarylane/linkedin-mcp-server/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/linkedin-mcp-server)](https://www.npmjs.com/package/linkedin-mcp-server)
+[![npm](https://img.shields.io/npm/v/@luminarylane/linkedin-mcp-server)](https://www.npmjs.com/package/@luminarylane/linkedin-mcp-server)
 [![MCP](https://img.shields.io/badge/MCP-1.0-blue)](https://modelcontextprotocol.io)
 [![GitHub Release](https://img.shields.io/github/v/release/luminarylane/linkedin-mcp-server)](https://github.com/luminarylane/linkedin-mcp-server/releases)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-22.14%2B-green)](https://nodejs.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 A Model Context Protocol (MCP) server that enables Claude Desktop (and other MCP clients) to interact with LinkedIn — publish posts, upload media, comment, react, and analyse your organisation's performance.
@@ -71,7 +71,7 @@ A Model Context Protocol (MCP) server that enables Claude Desktop (and other MCP
 
 ### Prerequisites
 
-- Node.js 18 or higher
+- Node.js 22.14 or higher
 - A [LinkedIn Developer app](https://developer.linkedin.com) with OAuth 2.0 configured
 - Claude Desktop (or any MCP-compatible client)
 
@@ -87,6 +87,8 @@ A Model Context Protocol (MCP) server that enables Claude Desktop (and other MCP
 For organisation analytics, note your **LinkedIn Organization ID** (numeric, from your company page URL).
 
 ## 📦 Installation
+
+Published package: [@luminarylane/linkedin-mcp-server on npm](https://www.npmjs.com/package/@luminarylane/linkedin-mcp-server)
 
 ### Option 0: Claude Code Plugin (Simplest for Claude Code Users) 🔌
 
@@ -108,7 +110,7 @@ Or install directly:
 
 ```bash
 # Test it works
-LINKEDIN_ACCESS_TOKEN=your-token npx -y linkedin-mcp-server
+LINKEDIN_ACCESS_TOKEN=your-token npx --yes @luminarylane/linkedin-mcp-server
 ```
 
 **Claude Desktop configuration:**
@@ -118,7 +120,7 @@ LINKEDIN_ACCESS_TOKEN=your-token npx -y linkedin-mcp-server
   "mcpServers": {
     "linkedin": {
       "command": "npx",
-      "args": ["-y", "linkedin-mcp-server"],
+      "args": ["--yes", "@luminarylane/linkedin-mcp-server"],
       "env": {
         "LINKEDIN_ACCESS_TOKEN": "your-access-token",
         "LINKEDIN_ORG_ID": "your-org-id"
@@ -133,14 +135,14 @@ LINKEDIN_ACCESS_TOKEN=your-token npx -y linkedin-mcp-server
 ### Option 2: Install from npm
 
 ```bash
-npm install -g linkedin-mcp-server
+npm install -g @luminarylane/linkedin-mcp-server
 ```
 
 ```json
 {
   "mcpServers": {
     "linkedin": {
-      "command": "linkedin-mcp-server",
+      "command": "luminarylane-linkedin-mcp",
       "env": {
         "LINKEDIN_ACCESS_TOKEN": "your-access-token",
         "LINKEDIN_ORG_ID": "your-org-id"
