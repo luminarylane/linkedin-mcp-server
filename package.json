@@ -1,6 +1,6 @@
 {
   "name": "@luminarylane/linkedin-mcp-server",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "description": "Standalone LinkedIn MCP Server — SENSE + ACT tools for the LinkedIn API",
   "type": "module",
   "main": "dist/index.js",
