@@ -25,8 +25,16 @@ import {
   personUrn,
   orgUrn,
 } from "./client.js";
+import logger from "./lib/logger.js";
+import { getSessionTrace, flushLangfuse, shutdownLangfuse } from "./lib/langfuse.js";
 import { textResult, errorResult, senseResult } from "./response.js";
 import { waitForRateLimit, withRetry } from "./rate-limiter.js";
+import {
+  fetchOrgAnalytics,
+  fetchPostAnalytics,
+  fetchFollowerStats,
+  fetchShareStats,
+} from "./lib/insights.js";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -190,11 +198,14 @@ function safeHandler<T>(
   ReturnType<typeof textResult | typeof senseResult | typeof errorResult>
 > {
   return async (args: T) => {
+    const trace = getSessionTrace("linkedin-mcp-server");
+    const span = trace?.span({ name: `tool:${toolName}`, input: args as Record<string, unknown> });
     const start = Date.now();
-    console.error(`[${toolName}] ← called`);
+    logger.error(`[${toolName}] ← called`);
     try {
       const result = await handler(args);
-      console.error(`[${toolName}] → ok (${Date.now() - start}ms)`);
+      logger.error(`[${toolName}] → ok (${Date.now() - start}ms)`);
+      span?.update({ output: result });
       return result;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -204,14 +215,17 @@ function safeHandler<T>(
           ? (e as { status: number }).status
           : undefined;
       const action = suggestAction(toolName, statusCode, detail);
-      console.error(
+      logger.error(
         `[${toolName}] → error (${Date.now() - start}ms): ${msg}${detail ? ` — ${detail}` : ""}`,
       );
+      span?.update({ output: { error: detail || msg, statusCode }, level: "ERROR" });
       return errorResult("API error", `${toolName} failed: ${detail || msg}`, {
         ...(statusCode && { statusCode }),
         ...(detail && detail !== msg && { rawError: msg }),
         ...(action && { action }),
       });
+    } finally {
+      span?.end();
     }
   };
 }
@@ -306,6 +320,94 @@ server.registerTool(
 // =====================
 // Discovery Tools
 // =====================
+
+server.registerTool(
+  "linkedin_list_organizations",
+  {
+    description:
+      "List LinkedIn organizations (Company Pages) the authenticated user administers. " +
+      "Returns organization IDs, names, and vanity URLs. Use the organizationId from the " +
+      "results to call analytics tools (get_org_analytics, get_follower_stats, etc.).",
+    inputSchema: {
+      ...credentialFields,
+    },
+  },
+  safeHandler("linkedin_list_organizations", async (args) => {
+    const result = await getClient(args, "linkedin_list_organizations");
+    if (!result.ok) return result.error;
+    const { client } = result;
+
+    const orgs = await client.getOrganizations();
+    if (orgs.length === 0) {
+      return textResult({
+        organizations: [],
+        message:
+          "No organizations found. The authenticated user does not administer any LinkedIn Company Pages.",
+      });
+    }
+
+    return textResult({
+      organizations: orgs,
+      message: `Found ${orgs.length} organization(s). Use the organizationId to call analytics tools.`,
+    });
+  }),
+);
+
+// =====================
+// SENSE Tools (read)
+// =====================
+
+server.registerTool(
+  "linkedin_get_my_posts",
+  {
+    description:
+      "Get the authenticated user's own LinkedIn posts (most recent first). " +
+      "Returns post URNs, text, creation time, and content type. " +
+      "Use the returned URNs with linkedin_get_post_analytics to check performance.",
+    inputSchema: {
+      ...credentialFields,
+      count: z
+        .number()
+        .optional()
+        .describe("Number of posts to return (default 20, max 100)"),
+    },
+  },
+  safeHandler("linkedin_get_my_posts", async (args) => {
+    const result = await getClient(args, "linkedin_get_my_posts");
+    if (!result.ok) return result.error;
+    const { client, credKey } = result;
+
+    const me = await resolveMe(client, credKey);
+    const authorUrn = personUrn(me.id);
+    const count = Math.min(
+      Math.max((args as Record<string, unknown>).count as number || 20, 1),
+      100,
+    );
+
+    const posts = await client.getMyPosts(authorUrn, count);
+
+    const simplified = posts.map((p) => {
+      const text =
+        (p.specificContent as Record<string, unknown>)?.["com.linkedin.ugc.ShareContent"] as Record<string, unknown> | undefined;
+      return {
+        urn: p.id,
+        created: p.created,
+        text: text?.shareCommentary
+          ? (text.shareCommentary as Record<string, unknown>).text
+          : "(no text)",
+        contentType: text?.shareMediaCategory ?? "NONE",
+        lifecycleState: p.lifecycleState,
+      };
+    });
+
+    return textResult({
+      author: me.name,
+      authorUrn,
+      postCount: simplified.length,
+      posts: simplified,
+    });
+  }),
+);
 
 server.registerTool(
   "linkedin_list_capabilities",
@@ -465,8 +567,7 @@ server.registerTool(
           maxDuration: "10 minutes",
           maxDimensions: "1920x1080",
           recommendedDimensions: "1920x1080 (landscape), 1080x1920 (vertical)",
-          notes:
-            "Upload may take several minutes for large files. H.264 codec recommended.",
+          notes: "Upload may take several minutes for large files. H.264 codec recommended.",
         },
         {
           type: "document",
@@ -483,10 +584,7 @@ server.registerTool(
           reason:
             "LinkedIn returns 403 for organic native carousels. Use PDF document instead — renders as swipeable carousel.",
         },
-        {
-          type: "audio",
-          reason: "LinkedIn does not support audio attachments on posts",
-        },
+        { type: "audio", reason: "LinkedIn does not support audio attachments on posts" },
       ],
       tip: "For carousel-style content, create a PDF and upload as a document — it renders as a swipeable carousel on LinkedIn.",
     });
@@ -524,29 +622,11 @@ server.registerTool(
     if (!result.ok) return result.error;
     const { client } = result;
 
-    const entityUrn = orgUrn(orgId);
-    const params: Record<string, string> = {
-      q: "organizationalEntity",
-      organizationalEntity: entityUrn,
-    };
-    if (args.timeRange) {
-      params["timeIntervals.timeGranularityType"] = "DAY";
-      params["timeIntervals.timeRange.start"] = args.timeRange;
-      params["timeIntervals.timeRange.end"] = String(Date.now());
-    }
-
-    const response = await withRetry(() =>
-      client.get("/v2/organizationalEntityShareStatistics", params),
-    );
-    const data = await response.json();
-
-    return senseResult(
-      {
-        organizationId: orgId,
-        analytics: data,
-      },
-      "LinkedIn",
-    );
+    const data = await fetchOrgAnalytics(client, {
+      organizationId: orgId,
+      timeRange: args.timeRange,
+    });
+    return senseResult(data, "LinkedIn");
   }),
 );
 
@@ -571,27 +651,8 @@ server.registerTool(
     if (!result.ok) return result.error;
     const { client } = result;
 
-    const encodedUrn = encodeURIComponent(args.postUrn);
-    const response = await withRetry(() =>
-      client.get(`/v2/socialActions/${encodedUrn}`),
-    );
-    const data = (await response.json()) as {
-      likesSummary?: { totalLikes?: number };
-      commentsSummary?: { totalFirstLevelComments?: number };
-      sharesSummary?: unknown;
-    };
-
-    return senseResult(
-      {
-        postUrn: args.postUrn,
-        metrics: {
-          likes: data.likesSummary?.totalLikes ?? 0,
-          comments: data.commentsSummary?.totalFirstLevelComments ?? 0,
-        },
-        raw: data,
-      },
-      "LinkedIn",
-    );
+    const data = await fetchPostAnalytics(client, { postUrn: args.postUrn });
+    return senseResult(data, "LinkedIn");
   }),
 );
 
@@ -719,22 +780,8 @@ server.registerTool(
     if (!result.ok) return result.error;
     const { client } = result;
 
-    const entityUrn = orgUrn(orgId);
-    const response = await withRetry(() =>
-      client.get("/v2/organizationalEntityFollowerStatistics", {
-        q: "organizationalEntity",
-        organizationalEntity: entityUrn,
-      }),
-    );
-    const data = await response.json();
-
-    return senseResult(
-      {
-        organizationId: orgId,
-        followerStats: data,
-      },
-      "LinkedIn",
-    );
+    const data = await fetchFollowerStats(client, { organizationId: orgId });
+    return senseResult(data, "LinkedIn");
   }),
 );
 
@@ -767,24 +814,11 @@ server.registerTool(
     if (!result.ok) return result.error;
     const { client } = result;
 
-    const entityUrn = orgUrn(orgId);
-    const shares = args.shareUrns.map(encodeURIComponent).join(",");
-    const response = await withRetry(() =>
-      client.get("/v2/organizationalEntityShareStatistics", {
-        q: "organizationalEntity",
-        organizationalEntity: entityUrn,
-        "shares[]": shares,
-      }),
-    );
-    const data = await response.json();
-
-    return senseResult(
-      {
-        organizationId: orgId,
-        shareStats: data,
-      },
-      "LinkedIn",
-    );
+    const data = await fetchShareStats(client, {
+      organizationId: orgId,
+      shareUrns: args.shareUrns,
+    });
+    return senseResult(data, "LinkedIn");
   }),
 );
 
@@ -918,7 +952,7 @@ server.registerTool(
       const postId = postResponse.headers.get("x-restli-id");
 
       if (!postId) {
-        console.error(
+        logger.error(
           `[linkedin_create_post] Posts API x-restli-id header missing — cannot determine post URN`,
         );
         return errorResult(
@@ -1007,12 +1041,13 @@ server.registerTool(
     }
 
     // --- First comment (if provided) ---
+    // Mirrors linkedin-posting-worker.ts: random 3-5s delay for natural appearance
     let firstCommentId: string | undefined;
     if (args.firstComment?.trim()) {
       const commentText = args.firstComment.trim().slice(0, 1250);
       try {
         const delayMs = 3000 + Math.random() * 2000;
-        console.error(
+        logger.error(
           `[linkedin_create_post] Posting first comment in ${Math.round(delayMs / 1000)}s...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -1025,7 +1060,7 @@ server.registerTool(
           commentError instanceof Error
             ? commentError.message
             : String(commentError);
-        console.error(`[linkedin_create_post] First comment failed: ${errMsg}`);
+        logger.error(`[linkedin_create_post] First comment failed: ${errMsg}`);
         // Return partial success — post was created but comment failed
         return errorResult(
           "Partial failure",
@@ -1232,13 +1267,13 @@ server.registerTool(
 
         if (status !== 404) throw postsApiError;
 
-        console.error(
+        logger.error(
           `[linkedin_delete_post] Posts API returned 404, falling back to UGC API`,
         );
         try {
           await withRetry(() => client.delete(`/v2/ugcPosts/${encodedUrn}`));
         } catch (ugcError) {
-          console.error(
+          logger.error(
             `[linkedin_delete_post] UGC API also failed after Posts API 404`,
           );
           throw ugcError;
@@ -1258,10 +1293,12 @@ server.registerTool(
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("LinkedIn MCP Server running on stdio");
+  logger.error("LinkedIn MCP Server running on stdio");
 }
 
-main().catch((e) => {
-  console.error("Fatal:", e);
+main().catch(async (e) => {
+  logger.error({ err: e }, "Fatal");
+  await flushLangfuse();
+  await shutdownLangfuse();
   process.exit(1);
 });

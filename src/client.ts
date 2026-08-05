@@ -1,7 +1,8 @@
 /**
  * Fetch-based LinkedIn API client with multi-step upload helpers.
  *
- * No SDK — uses raw fetch against the LinkedIn REST API.
+ * No SDK — uses raw fetch, mirroring the patterns in
+ * src/web/src/lib/linkedin/publisher.ts.
  *
  * Two different APIs:
  *   - UGC API (/v2/ugcPosts) — text, image, and video posts
@@ -121,6 +122,39 @@ export class LinkedInClient {
       );
     }
     return { id: data.sub, name: String(data.name ?? "Unknown") };
+  }
+
+  /** GET /v2/organizationAcls — returns organizations the authenticated user administers. */
+  async getOrganizations(): Promise<
+    Array<{ organizationId: string; role: string }>
+  > {
+    const response = await this.get(
+      "/v2/organizationAcls?q=roleAssignee&projection=(elements*(organization~(id,localizedName,vanityName),role))",
+    );
+    const data = (await response.json()) as Record<string, unknown>;
+    const elements = (data.elements ?? []) as Array<Record<string, unknown>>;
+    return elements.map((el) => {
+      const org = el["organization~"] as Record<string, unknown> | undefined;
+      return {
+        organizationId: String(org?.id ?? ""),
+        name: String(org?.localizedName ?? ""),
+        vanityName: String(org?.vanityName ?? ""),
+        role: String(el.role ?? ""),
+      };
+    });
+  }
+
+  /** GET /v2/ugcPosts?q=authors — returns the authenticated user's own posts. */
+  async getMyPosts(
+    authorUrn: string,
+    count = 20,
+  ): Promise<Array<Record<string, unknown>>> {
+    const encodedUrn = encodeURIComponent(authorUrn);
+    const response = await this.get(
+      `/v2/ugcPosts?q=authors&authors=List(${encodedUrn})&count=${count}&sortBy=LAST_MODIFIED`,
+    );
+    const data = (await response.json()) as Record<string, unknown>;
+    return (data.elements ?? []) as Array<Record<string, unknown>>;
   }
 
   /** Post a comment on a LinkedIn post. Returns comment ID from x-restli-id header. */
@@ -433,11 +467,7 @@ export class LinkedInClient {
         Authorization: `Bearer ${this.accessToken}`,
         "Content-Type": contentType,
       },
-      body: new Uint8Array(
-        body.buffer,
-        body.byteOffset,
-        body.byteLength,
-      ) as unknown as BodyInit,
+      body: new Uint8Array(body.buffer, body.byteOffset, body.byteLength) as unknown as BodyInit,
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (!response.ok) {

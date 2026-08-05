@@ -10,6 +10,8 @@
  * This is a simple in-memory implementation — no external dependencies.
  */
 
+import logger from "./lib/logger.js";
+
 interface BucketConfig {
   maxTokens: number;
   refillRate: number; // tokens per millisecond
@@ -115,8 +117,7 @@ export function checkRateLimit(
 ): { allowed: true } | { allowed: false; retryAfterMs: number } {
   const isWrite = toolName ? WRITE_TOOL_NAMES.has(toolName) : false;
 
-  const cost =
-    overrideCost ?? (isWrite && toolName ? WRITE_COSTS[toolName].cost : 1);
+  const cost = overrideCost ?? (isWrite && toolName ? WRITE_COSTS[toolName].cost : 1);
   const globalWait = globalBucket.msUntilAvailable(cost);
   if (globalWait > 0) return { allowed: false, retryAfterMs: globalWait };
 
@@ -164,7 +165,7 @@ export async function waitForRateLimit(
     return result;
   }
 
-  console.error(
+  logger.error(
     `[rate-limit] Waiting ${Math.ceil(result.retryAfterMs / 1000)}s for ${toolName ?? "read"} bucket...`,
   );
   await sleep(result.retryAfterMs);
@@ -189,7 +190,7 @@ export async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
       if (!is429 || attempt === MAX_429_RETRIES) throw e;
 
       const backoffMs = 2000 * Math.pow(2, attempt);
-      console.error(
+      logger.error(
         `[rate-limit] LinkedIn 429 — backing off ${backoffMs / 1000}s (attempt ${attempt + 1}/${MAX_429_RETRIES})...`,
       );
       await sleep(backoffMs);
